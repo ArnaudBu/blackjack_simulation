@@ -6,7 +6,7 @@
 
 # Working environment
 
-setwd("C:/Users/abussy01/Desktop/blackjack")
+setwd("~/blackjack_simulation/")
 
 # Source helpers
 
@@ -18,7 +18,7 @@ source("func.R")
 
 ndecks = 8
 soft17hit = TRUE
-max_tries = 100000
+max_tries = 10000000
 nb_hands = 3
 
 ###############################################################################
@@ -198,15 +198,11 @@ while(nrow(dt) < max_tries){
   }
   dt <- rbindlist(list(dt, g), fill = T)
   setTxtProgressBar(pb, nrow(dt))
+  if(nrow(dt) %% 10000 < 5){
+    fwrite(dt, "blackjack_games.csv", sep = ",", dec = ".", row.names = F)
+  }
 }
 
 close(pb)
 
-
-dt[, bust := ifelse(is.na(score_if_hit), FALSE, score_if_hit > 21)]
-dt[, bust_deal := score_fin_dealer > 21]
-dt[, win := score >= score_fin_dealer | bust_deal]
-dt[, win_if_hit := ifelse(is.na(score_if_hit), FALSE, score_if_hit >= score_fin_dealer & !bust)]
-dt[, should_hit := (win_if_hit | !bust) & !win]
-dt2 = dt[, .(possible_to_win = any(win | win_if_hit)), by = game_id]
-sum(dt2$possible_to_win)/ nrow(dt2)
+fwrite(dt, "blackjack_games.csv", sep = ",", dec = ".", row.names = F)
