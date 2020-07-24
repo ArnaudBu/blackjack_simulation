@@ -57,8 +57,8 @@ games[, hit := ifelse(win_if_hit, 1, ifelse(draw_if_hit, 0, -1))]
 
 # Clean the table
 games <- games[, c("score", "score_dealer", "hard", "score_if_hit",
-                   "score_fin_dealer", "game_id", "win", "draw",
-                   "hit", "stand", "double", "hard_if_hit")]
+                   "score_fin_dealer", "game_id", "hit", "stand", "double", 
+                   "hard_if_hit")]
 
 ###############################################################################
 
@@ -254,7 +254,7 @@ for(i in 1:nrow(strat)){
 strat[score == 12 & hard == F, should_split := TRUE]
 
 # Create a data.table to plot the strategy 
-gs <- strat[!is.na(should_split)]
+gs <- strat[!is.na(should_split) & hard]
 gs[should_split == TRUE, decision := "split"]
 
 # Plot the split cases
