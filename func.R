@@ -128,7 +128,21 @@ Hand <- R6Class("Hand",
                     hand2$get(private$.cards[2])
                     return(list(hand1, hand2))
                   },
-                  score = function(first_card = F, withas = T){
+                  ishard = function(){
+                    h = T
+                    s <- 0
+                    cards <- gsub("J|Q|K", "10", private$.cards)
+                    isas <- grepl("A", cards)
+                    for(c in cards[!isas]){
+                      s <- s + as.numeric(gsub("([0-9]+).*$", "\\1", c))
+                    }
+                    s <- s + sum(isas)
+                    if(s <= 11 & sum(isas) > 0){
+                      h <- F
+                    }
+                    return(h)
+                  },
+                  score = function(first_card = F){
                     s <- 0
                     cards <- gsub("J|Q|K", "10", private$.cards)
                     if(first_card){cards <- cards[1]}
@@ -136,15 +150,10 @@ Hand <- R6Class("Hand",
                     for(c in cards[!isas]){
                       s <- s + as.numeric(gsub("([0-9]+).*$", "\\1", c))
                     }
-                    if(withas){
-                      for(c in cards[isas]){
-                        if(s <= 10){
-                          s <- s + 11
-                        } else {
-                          s <- s + 1
-                        }
+                    s <- s + sum(isas)
+                      if(s <= 11 & sum(isas) > 0){
+                        s <- s + 10
                       }
-                    }
                     return(s)
                   }
                 )

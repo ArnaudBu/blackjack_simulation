@@ -1,6 +1,6 @@
 ###############################################################################
 #                                                                             #
-#                 Strategy for blackjack simulation                            #
+#                 Strategy for blackjack simulation                           #
 #                                                                             #
 ###############################################################################
 
@@ -72,7 +72,7 @@ init_hands <- function(){
 decision <- function(hand, strat, splitdone = F){
   r <- strat[score == hand$score() & 
                score_dealer == dealer$score(T) &
-               hard == (hand$score(withas = T) - hand$score(withas = F) < 2)]
+               hard == hand$ishard()]
   if(hand$cansplit() & !splitdone){
     if(!is.na(r$should_split)){
       if(r$should_split){
@@ -123,7 +123,7 @@ play_dealer <- function(){
   score_dealer <- dealer$score()
   
   # Play while not bust
-  while(score_dealer < 17 | (score_dealer == 17 & dealer$score(withas = F) <= 10 & soft17hit)){
+  while(score_dealer < 17 | (score_dealer == 17 & !dealer$ishard() & soft17hit)){
     
     # Get one card
     card <- get_card()
@@ -205,3 +205,62 @@ for(i in 1:n_session){
 close(pb)
 
 saveRDS(dt, "blackjack_strat.rds")
+
+###############################################################################
+
+# Analysis of the results
+
+dt = readRDS("blackjack_strat.rds")[1,,]
+
+# Cumulate by column
+dt = apply(dt, 1, cumsum)
+
+# Convert to long format for plot
+r <- data.table(melt(dt))
+colnames(r) <- c("game", "scenario", "earnings")
+
+# Get mean and sd on earnings
+
+# Transform into aggregated values
+r <- r[, .(e_mean = mean(earnings),
+           e_1 = quantile(earnings, 0.01),
+           e_5 = quantile(earnings, 0.05),
+           e_10 = quantile(earnings, 0.1),
+           e_90 = quantile(earnings, 0.9),
+           e_95 = quantile(earnings, 0.95),
+           e_99 = quantile(earnings, 0.99),
+           e_min = min(earnings),
+           e_max = max(earnings),
+           e_rnd = first(earnings)), by = .(game)]
+
+# Define colors for visualization
+rouge <- rgb(255,53,37, maxColorValue = 255)
+viol2 <- rgb(134,85,183, maxColorValue = 255)
+viol1 <- rgb(193,70,112, maxColorValue = 255)
+bleu <- rgb(82,105,254, maxColorValue = 255)
+jaune <- rgb(251,247,7, maxColorValue = 255)
+
+# Plot a visualisation
+p <- ggplot(r, aes(x = game)) +
+  geom_ribbon(aes(ymin = e_min, ymax = e_max, fill = "min | max"), color = NA) +
+  geom_ribbon(aes(ymin = e_1, ymax = e_99, fill = "1% | 99%"), color = NA) +
+  geom_ribbon(aes(ymin = e_5, ymax = e_95, fill = "5% | 95%"), color = NA) +
+  geom_ribbon(aes(ymin = e_10, ymax = e_90, fill = "10% | 90%"), color = NA) +
+  geom_line(aes(y = e_mean, linetype = "Average"), color = jaune) +
+  geom_line(aes(y = e_rnd, linetype = "Random"), color = jaune) +
+  scale_y_continuous(name = "Earnings") +
+  scale_x_continuous(name = "") +
+  scale_fill_manual(name="",values=c("min | max" = rouge,
+                                     "1% | 99%" = viol1,
+                                     "5% | 95%" = viol2,
+                                     "10% | 90%" = bleu)) +
+  scale_linetype_manual(name = "", values = c("Average" = 1,
+                                              "Random" = 2)) +
+  theme_minimal()
+
+# Save graph
+p
+ggsave("strategy.png", p)
+
+# Values
+r[nrow(r)]

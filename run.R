@@ -1,6 +1,6 @@
 ###############################################################################
 #                                                                             #
-#                 Helpers for blackjack simulation                            #
+#                 BlackJack Data Generator                                    #
 #                                                                             #
 ###############################################################################
 
@@ -95,6 +95,7 @@ play <- function(hand){
   res <- data.table(score = score,
                     score_dealer =dealer$score(T) ,
                     nbas = sum(grepl("A", hand$cards)),
+                    hard = hand$ishard(),
                     score_if_hit = NA_integer_,
                     score_fin_dealer = NA_integer_,
                     nb_as_out = nb_cards[1],
@@ -125,6 +126,7 @@ play <- function(hand){
     res <- data.table(score = score,
                       score_dealer =dealer$score(T) ,
                       nbas = sum(grepl("A", hand$cards)),
+                      hard = hand$ishard(),
                       score_if_hit = NA_integer_,
                       score_fin_dealer = NA_integer_,
                       nb_as_out = nb_cards[1],
@@ -150,7 +152,7 @@ play_dealer <- function(){
   score_dealer <- dealer$score()
   
   # Play while not bust
-  while(score_dealer < 17 | (score_dealer == 17 & dealer$score(withas = F) <= 10 & soft17hit)){
+  while(score_dealer < 17 | (score_dealer == 17 & !dealer$ishard() & soft17hit)){
     
     # Get one card
     card <- get_card()
