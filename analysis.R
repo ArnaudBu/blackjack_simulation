@@ -253,8 +253,10 @@ for(i in 1:nrow(strat)){
 # Handle the case when there are two aces, when you should always split
 strat[score == 12 & hard == F, should_split := TRUE]
 
-# Create a data.table to plot the strategy 
-gs <- strat[!is.na(should_split) & hard]
+# Create a data.table to plot the strategy
+gs <- strat
+gs[score == 2 & hard, should_split := TRUE]
+gs <- gs[!is.na(should_split) & hard]
 gs[should_split == TRUE, decision := "split"]
 
 # Plot the split cases
@@ -266,7 +268,7 @@ p <- ggplot(gs,
                      labels = as.character(2:11), 
                      breaks = 2:11)+
   scale_y_continuous("Score", 
-                     labels = as.character(seq(2, 20, 2)), 
+                     labels = c("A & A", paste(2:10, 2:10, sep = " & ")), 
                      breaks = seq(2, 20, 2))+
   theme_minimal() +
   theme(panel.grid.major = element_blank(), 
